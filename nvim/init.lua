@@ -1,0 +1,2 @@
+require("naz")
+print("Hello")
