@@ -12,18 +12,24 @@ tap "tuist/tuist"                # Project description manager for Xcode
 brew "bat"                        # cat clone with syntax highlighting
 brew "cloc"                       # Count lines of code
 brew "fzf"                        # Fuzzy finder for shell
+brew "gzip"                       # Compression utility
 brew "rename"                     # Rename files in batch
 brew "ripgrep"                    # Fast text searching (grep alternative)
 brew "thefuck"                    # Correct mistyped shell commands
+brew "tldr"                       # Simplified man pages
+brew "tmux"                       # Terminal multiplexer
 brew "tree"                       # Directory tree viewer
 brew "wget"                       # Command-line file downloader
 brew "pre-commit"                # Git hook framework
 brew "virtualenv"                # Python virtual environments
 brew "jq"                        # JSON CLI viewer
+brew "zsh-autosuggestions"        # Fish-like autosuggestions for zsh
+brew "zsh-syntax-highlighting"    # Syntax highlighting for zsh
 
 # ─────────────────────────────
 # 🔧 Developer Tools
 # ─────────────────────────────
+brew "clang-format"              # C/C++ code formatter
 brew "cmake"                     # C/C++ build tool
 brew "gcc"                       # GNU compiler
 brew "git-lfs"                   # Git Large File Storage
