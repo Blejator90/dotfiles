@@ -32,6 +32,28 @@ lsp_zero.on_attach(function(client, bufnr)
 
   -- Show function signature help (when typing args)
   vim.keymap.set("i", "<C-h>", function() vim.lsp.buf.signature_help() end, opts)
+  
+  -- Swift-specific keymaps
+  if vim.bo.filetype == "swift" then
+    vim.keymap.set("n", "<leader>wb", ":SwiftBuild<CR>", opts)
+    vim.keymap.set("n", "<leader>wr", ":SwiftRun<CR>", opts)
+    vim.keymap.set("n", "<leader>wt", ":SwiftTest<CR>", opts)
+    vim.keymap.set("n", "<leader>wo", ":XcodeOpen<CR>", opts)
+  end
+
+  -- TypeScript/NestJS-specific keymaps
+  if vim.bo.filetype == "typescript" then
+    -- Check if we're in a Node.js project (has package.json)
+    local package_json = vim.fn.findfile("package.json", ".;")
+    if package_json ~= "" then
+      vim.keymap.set("n", "<leader>tb", ":TSBuild<CR>", opts)
+      vim.keymap.set("n", "<leader>tl", ":TSLint<CR>", opts)
+      vim.keymap.set("n", "<leader>tt", ":TSTest<CR>", opts)
+      vim.keymap.set("n", "<leader>ti", ":TSTestIntegration<CR>", opts)
+      vim.keymap.set("n", "<leader>ta", ":TSTestAll<CR>", opts)
+      vim.keymap.set("n", "<leader>tr", ":TSRun<CR>", opts)
+    end
+  end
 end)
 
 -- Initialize Mason (LSP installer UI)
@@ -48,6 +70,82 @@ require('mason-lspconfig').setup({
     lsp_zero.default_setup -- Apply lsp-zero defaults to each LSP
   }
 })
+
+require('lspconfig').tsserver = nil
+require('lspconfig').ts_ls.setup({})
+
+require('lspconfig').sourcekit.setup({
+    cmd = { "xcrun", "sourcekit-lsp" },
+    filetypes = { "swift" },
+    root_dir = require('lspconfig.util').root_pattern(
+        "Package.swift",
+        "*.xcodeproj",
+        "*.xcworkspace",
+        ".git"
+    ),
+    settings = {
+        sourcekit = {
+            -- Enable indexing of system modules
+            indexSystemModules = true,
+        }
+    },
+    init_options = {
+        -- Point to the SDK for standard library definitions
+        capabilities = {
+            workspace = {
+                didChangeWatchedFiles = {
+                    dynamicRegistration = true
+                }
+            }
+        }
+    }
+})
+
+-- Swift-specific commands
+vim.api.nvim_create_user_command("SwiftBuild", function()
+  vim.cmd("terminal swift build")
+end, {})
+
+vim.api.nvim_create_user_command("SwiftRun", function()
+  vim.cmd("terminal swift run")
+end, {})
+
+vim.api.nvim_create_user_command("SwiftTest", function()
+  vim.cmd("terminal swift test")
+end, {})
+
+
+-- Open current file in Xcode for deeper inspection
+vim.api.nvim_create_user_command("XcodeOpen", function()
+  local file = vim.fn.expand("%:p")
+  vim.fn.system(string.format("open -a Xcode '%s'", file))
+end, {})
+
+-- TypeScript/NestJS-specific commands
+vim.api.nvim_create_user_command("TSBuild", function()
+  vim.cmd("terminal npm run build")
+end, {})
+
+vim.api.nvim_create_user_command("TSLint", function()
+  vim.cmd("terminal npm run lint")
+end, {})
+
+vim.api.nvim_create_user_command("TSTest", function()
+  vim.cmd("terminal npm test")
+end, {})
+
+vim.api.nvim_create_user_command("TSTestIntegration", function()
+  vim.cmd("terminal npm run test:integration")
+end, {})
+
+vim.api.nvim_create_user_command("TSTestAll", function()
+  vim.cmd("terminal npm run test:all")
+end, {})
+
+vim.api.nvim_create_user_command("TSRun", function()
+  vim.cmd("terminal npm run start:dev")
+  vim.cmd("startinsert")  -- automatically enter insert mode
+end, {})
 
 -- Load completion plugin
 local cmp = require('cmp')
