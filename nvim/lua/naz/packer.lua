@@ -14,7 +14,7 @@ return require('packer').startup(function(use)
   -----------------------------------------------------------
   use {
     'nvim-telescope/telescope.nvim',
-    tag = '0.1.4',
+    tag = '0.1.8',
     requires = { 'nvim-lua/plenary.nvim' }  -- Required dependency
   }
 
@@ -38,6 +38,16 @@ return require('packer').startup(function(use)
   }
 
   -----------------------------------------------------------
+  -- Auto-close parenthesis
+  -----------------------------------------------------------
+  use {
+    'windwp/nvim-autopairs',
+    config = function()
+        require("nvim-autopairs").setup {}
+    end
+  }
+
+  -----------------------------------------------------------
   -- UndoTree (visual undo history)
   -----------------------------------------------------------
   use 'mbbill/undotree'
@@ -46,6 +56,43 @@ return require('packer').startup(function(use)
   -- Wakatime (time tracking)
   -----------------------------------------------------------
   use 'wakatime/vim-wakatime'
+
+  -----------------------------------------------------------
+  -- Modern TypeScript/Testing Tools
+  -----------------------------------------------------------
+  -- Enhanced test runner with real-time feedback
+  use {
+    'nvim-neotest/neotest',
+    requires = {
+      'nvim-lua/plenary.nvim',
+      'nvim-treesitter/nvim-treesitter',
+      'antoinemadec/FixCursorHold.nvim',
+      'nvim-neotest/nvim-nio', -- Required dependency
+      'nvim-neotest/neotest-jest', -- Jest adapter
+      'mmllr/neotest-swift-testing', -- Swift Testing adapter
+    }
+  }
+
+  -- Modern formatting engine
+  use {
+    'stevearc/conform.nvim',
+    config = function()
+      require("conform").setup({})
+    end
+  }
+
+  -- Async linting (complements LSP)
+  use 'mfussenegger/nvim-lint'
+
+  -----------------------------------------------------------
+  -- Which-key (keybinding helper)
+  -----------------------------------------------------------
+  use {
+    'folke/which-key.nvim',
+    config = function()
+      require("which-key").setup {}
+    end
+  }
 
   -----------------------------------------------------------
   -- LSP & Autocompletion (lsp-zero preset)
