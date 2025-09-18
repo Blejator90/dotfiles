@@ -34,6 +34,13 @@ alias view="nvim -R"
 alias vimdiff="nvim -d"
 alias vf='nvim $(fzf)'
 
+
+# ------------------------------
+# DOTFILES ACCESS
+# ------------------------------
+alias tdot='tmux new-session -s dotfiles -c ~/dotfiles'
+alias vdot='cd ~/dotfiles && vim .'
+
 # ------------------------------
 # Java (OpenJDK 17)
 # ------------------------------
@@ -44,10 +51,6 @@ export PATH="/opt/homebrew/opt/openjdk@17/bin:$PATH"
 # ------------------------------
 export PATH=$PATH:/Users/nebojsanadj/Library/Android/sdk/platform-tools/
 
-# ------------------------------
-# Embedded Swift Toolchain
-# ------------------------------
-export TOOLCHAINS=$(plutil -extract CFBundleIdentifier raw /Library/Developer/Toolchains/swift-latest.xctoolchain/Info.plist)
 
 # ------------------------------
 # Node Version Manager
@@ -102,3 +105,12 @@ eval "$(thefuck --alias)"
 # Quiet login (optional)
 # ------------------------------
 # touch ~/.hushlogin  # [See below]
+
+# Added by LM Studio CLI (lms)
+export PATH="$PATH:/Users/nebojsanadj/.lmstudio/bin"
+# End of LM Studio CLI section
+
+
+
+# Load Angular CLI autocompletion.
+source <(ng completion script)
