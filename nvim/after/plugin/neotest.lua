@@ -1,17 +1,25 @@
 -- neotest.lua: Modern test runner configuration
 
+-- Only load Swift adapter if available
+local adapters = {
+  require("neotest-jest")({
+    jestCommand = "npm test --",
+    jestConfigFile = "package.json",
+    env = { CI = true },
+    cwd = function(path)
+      return vim.fn.getcwd()
+    end,
+  }),
+}
+
+-- Try to load Swift testing adapter
+local ok, swift_adapter = pcall(require, "neotest-swift-testing")
+if ok then
+  table.insert(adapters, swift_adapter)
+end
+
 require("neotest").setup({
-  adapters = {
-    require("neotest-jest")({
-      jestCommand = "npm test --",
-      jestConfigFile = "package.json",
-      env = { CI = true },
-      cwd = function(path)
-        return vim.fn.getcwd()
-      end,
-    }),
-    require("neotest-swift-testing"),
-  },
+  adapters = adapters,
 
   -- Show test output in floating window
   output = {

@@ -33,11 +33,21 @@ lsp_zero.on_attach(function(client, bufnr)
   -- Show function signature help (when typing args)
   vim.keymap.set("i", "<C-h>", function() vim.lsp.buf.signature_help() end, opts)
   
-  -- Swift-specific keymaps
+  -- Swift-specific keymaps (auto-detect project type)
   if vim.bo.filetype == "swift" then
-    vim.keymap.set("n", "<leader>wb", ":SwiftBuild<CR>", opts)
-    vim.keymap.set("n", "<leader>wr", ":SwiftRun<CR>", opts)
-    vim.keymap.set("n", "<leader>wt", ":SwiftTest<CR>", opts)
+    -- Check if we're in an Xcode project or SPM project
+    local has_package = vim.fn.findfile("Package.swift", ".;") ~= ""
+    local has_xcode = vim.fn.glob("*.xcodeproj") ~= "" or vim.fn.glob("*.xcworkspace") ~= ""
+
+    if has_xcode then
+      vim.keymap.set("n", "<leader>wb", ":XcodeBuild<CR>", opts)
+      vim.keymap.set("n", "<leader>wt", ":XcodeTest<CR>", opts)
+    elseif has_package then
+      vim.keymap.set("n", "<leader>wb", ":SwiftBuild<CR>", opts)
+      vim.keymap.set("n", "<leader>wr", ":SwiftRun<CR>", opts)
+      vim.keymap.set("n", "<leader>wt", ":SwiftTest<CR>", opts)
+    end
+
     vim.keymap.set("n", "<leader>wo", ":XcodeOpen<CR>", opts)
   end
 
@@ -71,8 +81,11 @@ require('mason-lspconfig').setup({
   }
 })
 
-require('lspconfig').tsserver = nil
-require('lspconfig').ts_ls.setup({})
+vim.lsp.config.ts_ls = {
+  cmd = { 'typescript-language-server', '--stdio' },
+  filetypes = { 'typescript', 'typescriptreact', 'javascript', 'javascriptreact' },
+  root_markers = { 'package.json', 'tsconfig.json' },
+}
 
 require('lspconfig').sourcekit.setup({
     cmd = { "xcrun", "sourcekit-lsp" },
@@ -85,17 +98,13 @@ require('lspconfig').sourcekit.setup({
     ),
     settings = {
         sourcekit = {
-            -- Enable indexing of system modules
             indexSystemModules = true,
         }
     },
-    init_options = {
-        -- Point to the SDK for standard library definitions
-        capabilities = {
-            workspace = {
-                didChangeWatchedFiles = {
-                    dynamicRegistration = true
-                }
+    capabilities = {
+        workspace = {
+            didChangeWatchedFiles = {
+                dynamicRegistration = true
             }
         }
     }
