@@ -3,8 +3,8 @@
 -- leader is 'Space'
 vim.g.mapleader = " "
 
--- exit out of folder/show folder
-vim.keymap.set("n", "<leader>lv", vim.cmd.Ex)
+-- exit out of folder/show folder (file explorer)
+vim.keymap.set("n", "<leader>lv", "<cmd>Explore<cr>")
 
 -- move selected lines up or down
 vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv")

@@ -2,7 +2,6 @@
 vim.diagnostic.config({
   -- Show diagnostics in virtual text (inline with code)
   virtual_text = {
-    enabled = true,
     source = "if_many", -- Show source if multiple
     prefix = "●", -- Symbol before diagnostic text
     spacing = 2,
