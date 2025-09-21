@@ -114,7 +114,6 @@ alias vdot='cd ~/dotfiles && vim .'
 # Git aliases (using functions for better performance)
 gcof() { git checkout $(git branch --format='%(refname:short)' | fzf); }
 glogf() { git log --oneline --decorate --graph | fzf; }
-gsd() { git diff --cached | bat -l diff 2>/dev/null || git diff --cached; }
 
 # Utility aliases
 alias cat='bat 2>/dev/null || cat'
