@@ -116,7 +116,7 @@ gcof() { git checkout $(git branch --format='%(refname:short)' | fzf); }
 glogf() { git log --oneline --decorate --graph | fzf; }
 
 # Utility aliases
-alias cat='bat 2>/dev/null || cat'
+alias cat='bat'
 alias ls='ls --color=auto'
 alias ll='ls -lah'
 alias la='ls -A'

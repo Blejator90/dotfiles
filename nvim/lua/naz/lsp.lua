@@ -26,31 +26,43 @@ lsp_zero.on_attach(function(client, bufnr)
       })
     end, { buffer = bufnr, desc = "Organize Imports" })
 
-    -- Auto organize imports on save (before formatting)
-    vim.api.nvim_create_autocmd("BufWritePre", {
-      buffer = bufnr,
-      group = vim.api.nvim_create_augroup("TypeScriptOrganizeImports", { clear = false }),
-      callback = function()
-        -- Run organize imports synchronously before save
-        local params = {
-          command = "_typescript.organizeImports",
-          arguments = { vim.api.nvim_buf_get_name(0) },
-        }
-        vim.lsp.buf_request_sync(bufnr, "workspace/executeCommand", params, 1000)
-      end,
-    })
 
     -- TypeScript/NestJS specific keymaps
     local package_json = vim.fn.findfile("package.json", ".;")
     if package_json ~= "" then
-      vim.keymap.set("n", "<leader>tb", ":TSBuild<CR>", { buffer = bufnr, desc = "TS Build" })
-      vim.keymap.set("n", "<leader>tl", ":TSLint<CR>", { buffer = bufnr, desc = "TS Lint" })
-      vim.keymap.set("n", "<leader>tt", ":TSTest<CR>", { buffer = bufnr, desc = "TS Test" })
-      vim.keymap.set("n", "<leader>tu", ":TSTestUnit<CR>", { buffer = bufnr, desc = "TS Test Unit" })
-      vim.keymap.set("n", "<leader>ti", ":TSTestIntegration<CR>", { buffer = bufnr, desc = "TS Test Integration" })
-      vim.keymap.set("n", "<leader>te", ":TSTestE2E<CR>", { buffer = bufnr, desc = "TS Test E2E" })
-      vim.keymap.set("n", "<leader>tr", ":TSDev<CR>", { buffer = bufnr, desc = "TS Run Dev" })
-      vim.keymap.set("n", "<leader>td", ":TSDev<CR>", { buffer = bufnr, desc = "TS Dev Server" })
+      -- Detect package manager
+      local pm = "npm"
+      if vim.fn.filereadable("bun.lockb") == 1 then
+        pm = "bun"
+      elseif vim.fn.filereadable("pnpm-lock.yaml") == 1 then
+        pm = "pnpm"
+      elseif vim.fn.filereadable("yarn.lock") == 1 then
+        pm = "yarn"
+      end
+
+      -- Build command
+      vim.keymap.set("n", "<leader>tb", function()
+        vim.cmd("split | terminal " .. pm .. " run build")
+      end, { buffer = bufnr, desc = "TS Build" })
+
+      -- Lint command
+      vim.keymap.set("n", "<leader>tl", function()
+        vim.cmd("split | terminal " .. pm .. " run lint")
+      end, { buffer = bufnr, desc = "TS Lint" })
+
+      -- Test command
+      vim.keymap.set("n", "<leader>tt", function()
+        vim.cmd("split | terminal " .. pm .. " test")
+      end, { buffer = bufnr, desc = "TS Test" })
+
+      -- Dev server
+      vim.keymap.set("n", "<leader>tr", function()
+        vim.cmd("split | terminal " .. pm .. " run dev")
+      end, { buffer = bufnr, desc = "TS Run Dev" })
+
+      vim.keymap.set("n", "<leader>td", function()
+        vim.cmd("split | terminal " .. pm .. " run dev")
+      end, { buffer = bufnr, desc = "TS Dev Server" })
     end
   end
 
@@ -109,9 +121,46 @@ require('mason-lspconfig').setup({
     'rust_analyzer',     -- Rust
     'clangd',            -- C/C++
     'lua_ls',            -- Lua
+    'sourcekit',         -- Swift
   },
   handlers = {
     lsp_zero.default_setup,
+
+    -- ESLint specific setup - suppress plugin errors
+    eslint = function()
+      require('lspconfig').eslint.setup({
+        on_attach = lsp_zero.on_attach,
+        capabilities = lsp_zero.get_capabilities(),
+        settings = {
+          workingDirectory = { mode = "location" },
+          codeAction = {
+            disableRuleComment = {
+              enable = true,
+              location = "separateLine"
+            },
+            showDocumentation = {
+              enable = true
+            }
+          },
+          quiet = true,  -- Suppress errors about missing plugins
+          rulesCustomizations = {},
+          run = "onType",
+          validate = "on",
+        },
+        handlers = {
+          -- Suppress diagnostic errors about missing plugins
+          ["textDocument/publishDiagnostics"] = function(_, result, ctx, config)
+            -- Filter out missing plugin errors
+            if result.diagnostics then
+              result.diagnostics = vim.tbl_filter(function(diagnostic)
+                return not string.match(diagnostic.message or "", "Cannot find module 'eslint%-plugin%-")
+              end, result.diagnostics)
+            end
+            vim.lsp.diagnostic.on_publish_diagnostics(_, result, ctx, config)
+          end,
+        },
+      })
+    end,
 
     -- TypeScript specific setup (using ts_ls as tsserver is deprecated)
     ts_ls = function()
@@ -196,6 +245,15 @@ require('mason-lspconfig').setup({
             },
           },
         },
+      })
+    end,
+
+    -- SourceKit-LSP for Swift and C-family languages
+    sourcekit = function()
+      require('lspconfig').sourcekit.setup({
+        on_attach = lsp_zero.on_attach,
+        capabilities = lsp_zero.get_capabilities(),
+        filetypes = { 'swift', 'c', 'cpp', 'objective-c', 'objective-cpp' },
       })
     end,
   }
