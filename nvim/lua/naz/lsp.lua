@@ -115,13 +115,12 @@ end)
 require('mason').setup({})
 require('mason-lspconfig').setup({
   ensure_installed = {
-    'tsserver',          -- TypeScript/JavaScript
+    'ts_ls',             -- TypeScript/JavaScript
     'eslint',            -- ESLint for JS/TS
     'pyright',           -- Python
     'rust_analyzer',     -- Rust
     'clangd',            -- C/C++
     'lua_ls',            -- Lua
-    'sourcekit',         -- Swift
   },
   handlers = {
     lsp_zero.default_setup,
@@ -249,8 +248,8 @@ require('mason-lspconfig').setup({
     end,
 
     -- SourceKit-LSP for Swift and C-family languages
-    sourcekit = function()
-      require('lspconfig').sourcekit.setup({
+    sourcekit_lsp = function()
+      require('lspconfig').sourcekit_lsp.setup({
         on_attach = lsp_zero.on_attach,
         capabilities = lsp_zero.get_capabilities(),
         filetypes = { 'swift', 'c', 'cpp', 'objective-c', 'objective-cpp' },

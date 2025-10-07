@@ -56,3 +56,10 @@ print("Init complete!")
 vim.api.nvim_create_user_command("TestConfig", function()
   vim.notify("Configuration is working!", vim.log.levels.INFO)
 end, { desc = "Test if config is working" })
+
+-- Command to open dotfiles
+vim.api.nvim_create_user_command("OpenDotfiles", function()
+  vim.cmd("tabnew")
+  vim.cmd("cd ~/dotfiles/nvim")
+  vim.cmd("Telescope find_files")
+end, { desc = "Open dotfiles in new tab" })

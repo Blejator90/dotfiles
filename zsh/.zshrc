@@ -52,6 +52,7 @@ lazy_load_nvm() {
   export NVM_DIR="$HOME/.nvm"
   [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
   [ -s "$NVM_DIR/bash_completion" ] && source "$NVM_DIR/bash_completion"
+  return 0
 }
 
 # Create placeholder functions that load NVM on first use
@@ -129,6 +130,117 @@ alias reload='source ~/.zshrc'
 alias please='sudo $(fc -ln -1)'
 
 # ------------------------------
+# Git Worktree Management
+# ------------------------------
+# Bash-compatible functions for managing git worktrees
+#
+# Usage:
+#   wtadd <branch-name>    - Create worktree in ../<project>-worktrees/<name> and cd into it
+#                            Automatically strips feature/chore/fix/ prefixes from directory name
+#   wtrm [branch-name]     - Delete worktree and branch (deletes current if no arg), cd to main
+#   wtcd                   - Interactive fzf picker to switch between worktrees (includes main)
+#
+# Examples:
+#   wtadd feature/new-ui          # Creates worktree at ../ios-worktrees/new-ui
+#   wtrm                          # Deletes current worktree and returns to main
+#   wtrm feature/new-ui           # Deletes specific worktree
+#   wtcd                          # Opens fzf to select worktree
+#
+# Note: Works from anywhere in the repo (main or any worktree)
+# Compatible with both zsh and bash - copy to ~/.bashrc for bash users
+
+wtadd() {
+  if [ -z "$1" ]; then
+    echo "Usage: wtadd <branch-name>"
+    return 1
+  fi
+  local branch_name="$1"
+  local feature_name="${branch_name#feature/}"
+  local feature_name="${feature_name#chore/}"
+  local feature_name="${feature_name#fix/}"
+  local main_worktree=$(git worktree list | head -1 | awk '{print $1}')
+  local project_name="$(basename $main_worktree)"
+  local worktree_dir="$(dirname $main_worktree)/${project_name}-worktrees/$feature_name"
+
+  mkdir -p "$(dirname $main_worktree)/${project_name}-worktrees"
+  git worktree add "$worktree_dir" -b "$branch_name" && cd "$worktree_dir"
+}
+
+wtrm() {
+  if [ -z "$1" ]; then
+    echo "Usage: wtrm <branch-name>"
+    return 1
+  fi
+  local branch_name="$1"
+  local feature_name="${branch_name#feature/}"
+  local feature_name="${feature_name#chore/}"
+  local feature_name="${feature_name#fix/}"
+  local main_worktree=$(git worktree list | head -1 | awk '{print $1}')
+  local project_name="$(basename $main_worktree)"
+  local worktree_dir="$(dirname $main_worktree)/${project_name}-worktrees/$feature_name"
+
+  git worktree remove "$worktree_dir" 2>/dev/null || rm -rf "$worktree_dir"
+  git worktree prune
+  git branch -d "$branch_name"
+}
+
+wtcd() {
+  local main_worktree=$(git worktree list | head -1 | awk '{print $1}')
+  local project_name="$(basename $main_worktree)"
+  local worktree_base="$(dirname $main_worktree)/${project_name}-worktrees"
+
+  # Build list with main repo + worktrees
+  local options="main\n"
+  if [ -d "$worktree_base" ]; then
+    options+=$(ls -1 "$worktree_base" 2>/dev/null)
+  fi
+
+  local selected=$(echo -e "$options" | fzf --prompt="Select worktree: ")
+  if [ "$selected" = "main" ]; then
+    cd "$main_worktree"
+  elif [ -n "$selected" ]; then
+    cd "$worktree_base/$selected"
+  fi
+}
+
+wtrm() {
+  local main_worktree=$(git worktree list | head -1 | awk '{print $1}')
+  local current_dir=$(pwd)
+
+  if [ -z "$1" ]; then
+    # No arg - delete current worktree
+    if [ "$current_dir" = "$main_worktree" ]; then
+      echo "Cannot delete main worktree"
+      return 1
+    fi
+
+    local branch_name=$(git branch --show-current)
+    local worktree_to_delete="$current_dir"
+    cd "$main_worktree"
+    git worktree remove "$worktree_to_delete" 2>/dev/null || rm -rf "$worktree_to_delete"
+    git worktree prune
+    git branch -d "$branch_name"
+  else
+    # Has arg - delete specified worktree
+    local branch_name="$1"
+    local feature_name="${branch_name#feature/}"
+    local feature_name="${feature_name#chore/}"
+    local feature_name="${feature_name#fix/}"
+    local project_name="$(basename $main_worktree)"
+    local worktree_dir="$(dirname $main_worktree)/${project_name}-worktrees/$feature_name"
+
+    # If deleting current worktree, cd to main first
+    if [ "$current_dir" = "$worktree_dir" ]; then
+      cd "$main_worktree"
+    fi
+
+    git worktree remove "$worktree_dir" 2>/dev/null || rm -rf "$worktree_dir"
+    git worktree prune
+    git branch -d "$branch_name"
+  fi
+}
+
+# ------------------------------
 # ZSH Enhancements (Conditional)
 # ------------------------------
 
@@ -147,3 +259,7 @@ alias please='sudo $(fc -ln -1)'
 # Uncomment to debug slow startup
 # zmodload zsh/zprof  # At the top of .zshrc
 # zprof  # At the bottom of .zshrc
+# Added by LM Studio CLI (lms)
+export PATH="$PATH:/Users/nebojsanadj/.lmstudio/bin"
+# End of LM Studio CLI section
+
